@@ -1,22 +1,20 @@
-import { createXai } from '@ai-sdk/xai';
-import { createGroq } from '@ai-sdk/groq';
+import { createOpenAI } from '@ai-sdk/openai';
 import { customProvider, extractReasoningMiddleware, wrapLanguageModel } from 'ai';
-import { XAI_API_KEY, GROQ_API_KEY } from '$env/static/private';
+import { OPENAI_API_KEY } from '$env/static/private';
 
-const xai = createXai({ apiKey: XAI_API_KEY });
-const groq = createGroq({ apiKey: GROQ_API_KEY });
+const openai = createOpenAI({ apiKey: OPENAI_API_KEY });
 
 export const myProvider = customProvider({
 	languageModels: {
-		'chat-model': xai('grok-2-1212'),
+		'chat-model': openai('gpt-4-mini'),
 		'chat-model-reasoning': wrapLanguageModel({
-			model: groq('deepseek-r1-distill-llama-70b'),
+			model: openai('deepseek-r1-distill-llama-70b'),
 			middleware: extractReasoningMiddleware({ tagName: 'think' })
 		}),
-		'title-model': xai('grok-2-1212'),
-		'artifact-model': xai('grok-2-1212')
+		'title-model': openai('gpt-4-mini'),
+		'artifact-model': openai('gpt-4-mini')
 	},
 	imageModels: {
-		'small-model': xai.image('grok-2-image')
+		'small-model': openai.image('gpt-4-mini')
 	}
 });
