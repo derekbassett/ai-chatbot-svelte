@@ -8,7 +8,7 @@ import type { AuthUser } from '$lib/server/db/schema.js';
 import { fail, redirect } from '@sveltejs/kit';
 import { compare } from 'bcrypt-ts';
 import { err, ok, safeTry } from 'neverthrow';
-import { z } from 'zod';
+import { z } from 'zod/v3';
 
 export function load({ locals }) {
 	if (locals.session) {

@@ -28,6 +28,7 @@
 		class?: string;
 	} = $props();
 
+	let input = $state('');
 	let mounted = $state(false);
 	let textareaRef = $state<HTMLTextAreaElement | null>(null);
 	let fileInputRef = $state<HTMLInputElement | null>(null);
@@ -50,7 +51,7 @@
 	};
 
 	function setInput(value: string) {
-		chatClient.input = value;
+		input = value;
 		adjustHeight();
 	}
 
@@ -59,10 +60,15 @@
 			replaceState(`/chat/${chatClient.id}`, {});
 		}
 
-		await chatClient.handleSubmit(event, {
-			experimental_attachments: attachments
-		});
+		chatClient.sendMessage(
+			{text: input.trim()},
+		);
 
+		// await chatClient.handleSubmit(event, {
+			// experimental_attachments: attachments
+		// });
+
+		input = '';
 		attachments = [];
 		resetHeight();
 
@@ -122,7 +128,7 @@
 	}
 
 	onMount(() => {
-		chatClient.input = storedInput.value;
+		input = storedInput.value;
 		adjustHeight();
 		mounted = true;
 	});
@@ -168,7 +174,7 @@
 	<Textarea
 		bind:ref={textareaRef}
 		placeholder="Send a message..."
-		bind:value={() => chatClient.input, setInput}
+		bind:value={() => input, setInput}
 		class={cn(
 			'bg-muted max-h-[calc(75dvh)] min-h-[24px] resize-none overflow-hidden rounded-2xl pb-10 !text-base dark:border-zinc-700',
 			c
@@ -235,7 +241,7 @@
 			event.preventDefault();
 			submitForm();
 		}}
-		disabled={chatClient.input.length === 0 || uploadQueue.length > 0}
+		disabled={input.length === 0 || uploadQueue.length > 0}
 	>
 		<ArrowUpIcon size={14} />
 	</Button>

@@ -1,5 +1,5 @@
 import { error } from '@sveltejs/kit';
-import { z } from 'zod';
+import { z } from 'zod/v3';
 import { put } from '@vercel/blob';
 import { BLOB_READ_WRITE_TOKEN } from '$env/static/private';
 

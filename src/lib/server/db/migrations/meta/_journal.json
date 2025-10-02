@@ -1,13 +1,20 @@
 {
-	"version": "7",
-	"dialect": "postgresql",
-	"entries": [
-		{
-			"idx": 0,
-			"version": "7",
-			"when": 1742595457496,
-			"tag": "0000_ambiguous_dragon_man",
-			"breakpoints": true
-		}
-	]
+  "version": "7",
+  "dialect": "postgresql",
+  "entries": [
+    {
+      "idx": 0,
+      "version": "7",
+      "when": 1742595457496,
+      "tag": "0000_ambiguous_dragon_man",
+      "breakpoints": true
+    },
+    {
+      "idx": 1,
+      "version": "7",
+      "when": 1759428384860,
+      "tag": "0001_tense_pet_avengers",
+      "breakpoints": true
+    }
+  ]
 }
