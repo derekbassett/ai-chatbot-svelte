@@ -134,7 +134,7 @@
 	});
 
 	$effect.pre(() => {
-		storedInput.value = chatClient.input;
+		storedInput.value = input;
 	});
 </script>
 

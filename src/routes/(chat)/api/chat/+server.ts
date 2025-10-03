@@ -53,15 +53,12 @@ export async function POST({ request, locals: { user }, cookies }) {
 				error(403, 'Forbidden');
 			}
 
-			/* FIXME(@ai-sdk-upgrade-v5): The `experimental_attachments` property has been replaced with the parts array. Please manually migrate following https://ai-sdk.dev/docs/migration-guides/migration-guide-5-0#attachments--file-parts */
             yield* saveMessages({
 				messages: [
 					{
 						chatId: id,
 						id: userMessage.id,
-						role: 'user',
 						parts: userMessage.parts,
-						attachments: userMessage.experimental_attachments ?? [],
 						createdAt: new Date()
 					}
 				]

@@ -52,9 +52,10 @@ export const message = pgTable('Message', {
 	chatId: uuid('chatId')
 		.notNull()
 		.references(() => chat.id),
+	role: varchar('role').notNull(),
 	parts: json('parts').notNull(),
 	createdAt: timestamp('createdAt').notNull()
-});
+});	
 
 export type Message = InferSelectModel<typeof message>;
 
