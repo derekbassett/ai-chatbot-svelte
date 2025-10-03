@@ -1,4 +1,4 @@
-import type { CoreAssistantMessage, CoreToolMessage, UIMessage } from 'ai';
+import type { AssistantModelMessage, CoreAssistantMessage, CoreToolMessage, ToolModelMessage, UIMessage } from 'ai';
 import type { Message, Document } from '$lib/server/db/schema';
 
 export function convertToUIMessages(messages: Array<Message>): Array<UIMessage> {
@@ -22,7 +22,7 @@ export function getDocumentTimestampByIndex(documents: Array<Document>, index: n
 	return documents[index].createdAt;
 }
 
-type ResponseMessageWithoutId = CoreToolMessage | CoreAssistantMessage;
+type ResponseMessageWithoutId = ToolModelMessage | AssistantModelMessage;
 type ResponseMessage = ResponseMessageWithoutId & { id: string };
 
 export function getTrailingMessageId({

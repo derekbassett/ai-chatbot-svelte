@@ -7,12 +7,14 @@ import { getMostRecentUserMessage, getTrailingMessageId } from '$lib/utils/chat.
 import { allowAnonymousChats } from '$lib/utils/constants.js';
 import { error } from '@sveltejs/kit';
 import {
-    appendResponseMessages,
     createUIMessageStreamResponse,
     smoothStream,
     streamText,
     type UIMessage,
     stepCountIs,
+	createUIMessageStream,
+	generateId,
+	convertToModelMessages
 } from 'ai';
 import { ok, safeTry } from 'neverthrow';
 
@@ -58,6 +60,7 @@ export async function POST({ request, locals: { user }, cookies }) {
 					{
 						chatId: id,
 						id: userMessage.id,
+						role: userMessage.role,
 						parts: userMessage.parts,
 						createdAt: new Date()
 					}
@@ -68,81 +71,42 @@ export async function POST({ request, locals: { user }, cookies }) {
 		}).orElse(() => error(500, 'An error occurred while processing your request'));
 	}
 
-	return createUIMessageStreamResponse({
-		execute: (dataStream) => {
+	const stream = createUIMessageStream({
+		execute: ({ writer: UIMessageStreamWriter }) => {
+			// Implementation details for the message stream
 			const result = streamText({
-                model: myProvider.languageModel(selectedChatModel),
-                system: systemPrompt({ selectedChatModel }),
-                messages,
-                stopWhen: stepCountIs(5),
-                experimental_activeTools: [],
-
-                // TODO
-                // selectedChatModel === 'chat-model-reasoning'
-                // 	? []
-                // 	: ['getWeather', 'createDocument', 'updateDocument', 'requestSuggestions'],
-                experimental_transform: smoothStream({ chunking: 'word' }),
-
-                experimental_generateMessageId: crypto.randomUUID.bind(crypto),
-
-                // TODO
-                // tools: {
-                // 	getWeather,
-                // 	createDocument: createDocument({ session, dataStream }),
-                // 	updateDocument: updateDocument({ session, dataStream }),
-                // 	requestSuggestions: requestSuggestions({
-                // 		session,
-                // 		dataStream
-                // 	})
-                // },
-                onFinish: async ({ response }) => {
-					if (!user) return;
-					const assistantId = getTrailingMessageId({
-						messages: response.messages.filter((message) => message.role === 'assistant')
-					});
-
-					if (!assistantId) {
-						throw new Error('No assistant message found!');
-					}
-
-					/* FIXME(@ai-sdk-upgrade-v5): The `appendResponseMessages` option has been removed. Please manually migrate following https://ai-sdk.dev/docs/migration-guides/migration-guide-5-0#message-persistence-changes */
-                    const [, assistantMessage] = appendResponseMessages({
-						messages: [userMessage],
-						responseMessages: response.messages
-					});
-
-					/* FIXME(@ai-sdk-upgrade-v5): The `experimental_attachments` property has been replaced with the parts array. Please manually migrate following https://ai-sdk.dev/docs/migration-guides/migration-guide-5-0#attachments--file-parts */
-                    await saveMessages({
-						messages: [
-							{
-								id: assistantId,
-								chatId: id,
-								role: assistantMessage.role,
-								parts: assistantMessage.parts,
-								attachments: assistantMessage.experimental_attachments ?? [],
-								createdAt: new Date()
-							}
-						]
-					});
-				},
-
-                experimental_telemetry: {
-					isEnabled: true,
-					functionId: 'stream-text'
-				}
-            });
-
-			result.consumeStream();
-
-			result.mergeIntoUIMessageStream(dataStream, {
-				sendReasoning: true
+				model: myProvider.languageModel(selectedChatModel),
+				system: systemPrompt({ selectedChatModel }),
+				messages: convertToModelMessages(messages),
+				stopWhen: stepCountIs(5),
+				experimental_activeTools: [],
+				experimental_transform: smoothStream({ chunking: 'word' }),
 			});
-		},
-		onError: (e) => {
-			console.error(e);
-			return 'Oops!';
+
+			result.toUIMessageStreamResponse({
+				originalMessages: messages,
+				generateMessageId: generateId,
+				onFinish: async ({ messages, responseMessage}) => {
+					// Handle the result of the stream
+					if (!user) return;
+					const messagesToSave = messages.map(message => {
+						return {
+							id: message.id,
+							chatId: id,
+							role: message.role,
+							parts: message.parts,
+							createdAt: new Date()
+						};
+					});
+					await saveMessages({
+						messages: messagesToSave
+					});
+				}
+			})
 		}
 	});
+
+	return createUIMessageStreamResponse({ stream });
 }
 
 export async function DELETE({ locals: { user }, request }) {
