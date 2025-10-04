@@ -6,7 +6,7 @@
 	import { onMount } from 'svelte';
 	import { LocalStorage } from '$lib/hooks/local-storage.svelte';
 	import { innerWidth } from 'svelte/reactivity/window';
-	import type { Attachment } from 'ai';
+	import type { FileUIPart } from 'ai';
 	import { toast } from 'svelte-sonner';
 	import { Button } from './ui/button';
 	import PaperclipIcon from './icons/paperclip.svelte';
@@ -17,12 +17,12 @@
 	import type { User } from '$lib/server/db/schema';
 
 	let {
-		attachments = $bindable(),
+		fileParts = $bindable(),
 		user,
 		chatClient,
 		class: c
 	}: {
-		attachments: Attachment[];
+		fileParts: FileUIPart[];
 		user: User | undefined;
 		chatClient: Chat;
 		class?: string;
@@ -61,15 +61,11 @@
 		}
 
 		chatClient.sendMessage(
-			{text: input.trim()},
+			{text: input.trim(), files: fileParts},
 		);
 
-		// await chatClient.handleSubmit(event, {
-			// experimental_attachments: attachments
-		// });
-
 		input = '';
-		attachments = [];
+		fileParts = [];
 		resetHeight();
 
 		if (innerWidth.current && innerWidth.current > 768) {
@@ -114,12 +110,19 @@
 
 		try {
 			const uploadPromises = files.map((file) => uploadFile(file));
-			const uploadedAttachments = await Promise.all(uploadPromises);
-			const successfullyUploadedAttachments = uploadedAttachments.filter(
-				(attachment) => attachment !== undefined
-			);
+			const uploadedFileParts = await Promise.all(uploadPromises);
+			const successfullyUploadedFileParts = uploadedFileParts.filter(
+				(filePart) => filePart !== undefined
+			).map((filePart) => {
+				const { url, name, contentType } = filePart;
+				return {
+					type: 'file' as const,
+					url,
+					mediaType: contentType
+				} as FileUIPart;
+			});
 
-			attachments = [...attachments, ...successfullyUploadedAttachments];
+			fileParts = [...fileParts, ...successfullyUploadedFileParts];
 		} catch (error) {
 			console.error('Error uploading files!', error);
 		} finally {
@@ -139,7 +142,7 @@
 </script>
 
 <div class="relative flex w-full flex-col gap-4">
-	{#if mounted && chatClient.messages.length === 0 && attachments.length === 0 && uploadQueue.length === 0}
+	{#if mounted && chatClient.messages.length === 0 && fileParts.length === 0 && uploadQueue.length === 0}
 		<SuggestedActions {user} {chatClient} />
 	{/if}
 
@@ -152,9 +155,9 @@
 		tabIndex={-1}
 	/>
 
-	{#if attachments.length > 0 || uploadQueue.length > 0}
+	{#if fileParts.length > 0 || uploadQueue.length > 0}
 		<div class="flex flex-row items-end gap-2 overflow-x-scroll">
-			{#each attachments as attachment (attachment.url)}
+			{#each fileParts as attachment (attachment.url)}
 				<PreviewAttachment {attachment} />
 			{/each}
 

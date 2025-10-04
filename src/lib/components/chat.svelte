@@ -1,6 +1,6 @@
 <script lang="ts">
 	import { Chat } from '@ai-sdk/svelte';
-	import type { Attachment } from 'ai';
+	import { generateId, type FileUIPart } from 'ai';
 	import { toast } from 'svelte-sonner';
 	import { ChatHistory } from '$lib/hooks/chat-history.svelte';
 	import ChatHeader from './chat-header.svelte';
@@ -29,9 +29,8 @@
 			id: chat?.id,
 			// This way, the client is only recreated when the ID changes, allowing us to fully manage messages
 			// clientside while still SSRing them on initial load or when we navigate to a different chat.
-			initialMessages: untrack(() => initialMessages),
-			sendExtraMessageFields: true,
-			generateId: crypto.randomUUID.bind(crypto),
+			messages: untrack(() => initialMessages),
+			generateId: generateId,
 			onFinish: async () => {
 				await chatHistory.refetch();
 			},
@@ -57,7 +56,7 @@
 		})
 	);
 
-	let attachments = $state<Attachment[]>([]);
+	let fileParts = $state<FileUIPart[]>([]);
 </script>
 
 <div class="bg-background flex h-dvh min-w-0 flex-col">
@@ -70,25 +69,8 @@
 
 	<form class="bg-background mx-auto flex w-full gap-2 px-4 pb-4 md:max-w-3xl md:pb-6">
 		{#if !readonly}
-			<MultimodalInput {attachments} {user} {chatClient} class="flex-1" />
+			<MultimodalInput {fileParts} {user} {chatClient} class="flex-1" />
 		{/if}
 	</form>
 </div>
 
-<!-- TODO -->
-<!-- <Artifact
-	chatId={id}
-	{input}
-	{setInput}
-	{handleSubmit}
-	{isLoading}
-	{stop}
-	{attachments}
-	{setAttachments}
-	{append}
-	{messages}
-	{setMessages}
-	{reload}
-	{votes}
-	{readonly}
-/> -->
