@@ -1,6 +1,6 @@
 <script lang="ts">
 	import type { Chat } from '@ai-sdk/svelte';
-	import PreviewAttachment from './preview-attachment.svelte';
+	import PreviewFile from './preview-file.svelte';
 	import { Textarea } from './ui/textarea';
 	import { cn } from '$lib/utils/shadcn';
 	import { onMount } from 'svelte';
@@ -157,16 +157,17 @@
 
 	{#if fileParts.length > 0 || uploadQueue.length > 0}
 		<div class="flex flex-row items-end gap-2 overflow-x-scroll">
-			{#each fileParts as attachment (attachment.url)}
-				<PreviewAttachment {attachment} />
+			{#each fileParts as filePart (filePart.url)}
+				<PreviewFile {filePart} />
 			{/each}
 
 			{#each uploadQueue as filename (filename)}
-				<PreviewAttachment
-					attachment={{
+				<PreviewFile
+					filePart={{
+						type: 'file',
 						url: '',
-						name: filename,
-						contentType: ''
+						filename,
+						mediaType: ''
 					}}
 					uploading
 				/>

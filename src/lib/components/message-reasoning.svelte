@@ -6,7 +6,8 @@
 	import { cubicInOut } from 'svelte/easing';
 	import { getLock } from '$lib/hooks/lock';
 	import { tick } from 'svelte';
-	let { loading, reasoning }: { loading: boolean; reasoning: string } = $props();
+	import type { ReasoningUIPart } from 'ai';
+	let { loading, reasoning }: { loading: boolean; reasoning: ReasoningUIPart } = $props();
 	let expanded = $state(false);
 	const scrollLock = getLock('messages-scroll');
 
@@ -54,7 +55,7 @@
 			onoutroend={unlockScrolling}
 			class="mt-4 mb-2 flex flex-col gap-4 border-l pl-4 text-zinc-600 dark:text-zinc-400"
 		>
-			<Markdown md={reasoning} />
+			<Markdown md={reasoning.text} />
 		</div>
 	{/if}
 </div>

@@ -1,26 +1,26 @@
 <script lang="ts">
-	import type { Attachment } from 'ai';
+	import type { FileUIPart } from 'ai';
 	import LoaderIcon from './icons/loader.svelte';
 
 	let {
-		attachment,
+		filePart,
 		uploading = false
 	}: {
-		attachment: Attachment;
+		filePart: FileUIPart;
 		uploading?: boolean;
 	} = $props();
 
-	const { name, url, contentType } = $derived(attachment);
+	const { filename, url, mediaType } = $derived(filePart);
 </script>
 
 <div class="flex flex-col gap-2">
 	<div
 		class="bg-muted relative flex aspect-video h-16 w-20 flex-col items-center justify-center rounded-md"
 	>
-		{#if contentType && contentType.startsWith('image')}
+		{#if mediaType && mediaType.startsWith('image')}
 			<img
 				src={url}
-				alt={name ?? 'An image attachment'}
+				alt={filename ?? 'An image attachment'}
 				class="size-full rounded-md object-cover"
 			/>
 		{:else}
